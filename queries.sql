@@ -184,26 +184,21 @@ INSERT INTO
 
 UPDATE stage_2
 SET customers_new = order_count_sum
-	FROM(
+FROM(
+	SELECT
+	purchase_year_first,
+	COUNT(1)
+	FROM (
 		SELECT
-			SUM(order_count) AS order_count_sum, -- Total the number of orders
-			DATE_PART ('year', t3.order_purchase_timestamp) AS purchase_year -- Year
-		FROM (
-			SELECT
-				DISTINCT cd.customer_unique_id, -- Unique users
-				COUNT(od.order_id) AS order_count -- Number of orders
-				FROM orders_dataset od
-				JOIN customers_dataset cd
-				ON od.customer_id = cd.customer_id
-				GROUP BY cd.customer_unique_id -- How many order(s) each user made
-		) AS t1
-		JOIN customers_dataset AS t2
-			on t1.customer_unique_id = t2.customer_unique_id
-		JOIN orders_dataset AS t3
-			on t2.customer_id = t3.customer_id
-		GROUP BY purchase_year -- The number of new users on yearly basis  
-	) o3
-	WHERE stage_2.year = o3.purchase_year;
+		DISTINCT cd.customer_unique_id, -- Unique users
+		DATE_PART ('year', MIN(od.order_purchase_timestamp)) AS purchase_year_first
+		FROM orders_dataset od
+		JOIN customers_dataset cd
+		ON od.customer_id = cd.customer_id
+		GROUP BY cd.customer_unique_id -- How many order(s) each user made
+	) AS t1
+	GROUP BY purchase_year_first
+	ORDER BY purchase_year_first
 
 	
 -- 3. Number of users with repeat order:
