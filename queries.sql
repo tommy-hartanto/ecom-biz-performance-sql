@@ -260,6 +260,7 @@ CREATE TABLE stage_3 ( -- create table with the name 'stage_3' to contain future
 	revenue DOUBLE PRECISION, -- annual revenue
 	order_cancelled INT, -- number of cancelled orders per year
 	revenue_highest_product_category VARCHAR, -- product category with the highest revenue in the year
+	category_revenue INT, -- total revenue of the respective category in the year
 	order_cancelled_highest_product_category VARCHAR); -- product category with the most canceled order in the year
 
 
@@ -301,12 +302,15 @@ WHERE stage_3.year = t1.purchase_year;
 -- 3.
 
 UPDATE stage_3
-SET revenue_highest_product_category = product_category_name -- update assigned table
+SET
+revenue_highest_product_category = product_category_name, -- update assigned table
+category_revenue = t3.revenue
 FROM (
 	SELECT
 	purchase_year,
 	product_category_name,
-	rank -- third, show only the highest ranked
+	rank, -- third, show only the highest ranked
+	revenue
 	FROM (
 		SELECT
 		purchase_year,
@@ -328,7 +332,7 @@ FROM (
 		) AS t1
 	) AS t2
 	WHERE rank = 1 -- filter for only the highest rank of revenue
-	GROUP BY purchase_year, product_category_name, rank -- group based on year and product category respectively
+	GROUP BY purchase_year, product_category_name, rank, revenue -- group based on year and product category respectively
 ) AS t3
 WHERE stage_3.year = t3.purchase_year;
 
